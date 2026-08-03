@@ -26,11 +26,14 @@ jobs:
       packages: write
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository_owner }}/actions-runner-podman
       RUNNER_VERSION: ${{ github.event.inputs.runner_version || '2.336.0' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Compute lowercase image name
+        id: image
+        run: echo "name=$(echo '${{ github.repository_owner }}/actions-runner-podman' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
       - name: Setup Docker buildx
         uses: docker/setup-buildx-action@v3
@@ -48,8 +51,8 @@ jobs:
           context: ./images
           platforms: linux/amd64
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:runner-${{ env.RUNNER_VERSION }}
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:latest
+            ${{ env.REGISTRY }}/${{ steps.image.outputs.name }}:runner-${{ env.RUNNER_VERSION }}
           build-args: |
             RUNNER_VERSION=${{ env.RUNNER_VERSION }}
           push: true
