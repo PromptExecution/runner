@@ -54,6 +54,15 @@ RUN add-apt-repository ppa:git-core/ppa \
     && apt install -y git \
     && rm -rf /var/lib/apt/lists/*
 
+# PromptExecution fork addition: bake in podman so CI jobs on this runner
+# don't need to self-install it per-run. Ubuntu 24.04 (noble) ships podman
+# in the default repos, no PPA needed (unlike git above). uidmap/fuse-overlayfs
+# are needed for rootless podman's user-namespace + storage-driver fallback,
+# since this runs as non-root "runner" inside an already-rootless podman pod.
+RUN apt update -y \
+    && apt install -y --no-install-recommends podman uidmap fuse-overlayfs \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN adduser --disabled-password --gecos "" --uid 1001 runner \
     && groupadd docker --gid 123 \
     && usermod -aG sudo runner \
